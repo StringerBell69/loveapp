@@ -4,6 +4,10 @@ ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE love_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bucket_list_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wishlist_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rituals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ritual_completions ENABLE ROW LEVEL SECURITY;
 
 -- Function to generate unique couple code
 CREATE OR REPLACE FUNCTION generate_couple_code()
@@ -212,3 +216,244 @@ CREATE POLICY "Users can delete their own messages"
   USING (
     from_user_id = auth.uid()
   );
+
+-- Triggers for Phase 3 tables
+DROP TRIGGER IF EXISTS update_bucket_list_updated_at ON bucket_list_items;
+CREATE TRIGGER update_bucket_list_updated_at
+  BEFORE UPDATE ON bucket_list_items
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_wishlist_updated_at ON wishlist_items;
+CREATE TRIGGER update_wishlist_updated_at
+  BEFORE UPDATE ON wishlist_items
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_rituals_updated_at ON rituals;
+CREATE TRIGGER update_rituals_updated_at
+  BEFORE UPDATE ON rituals
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to calculate ritual streak
+CREATE OR REPLACE FUNCTION calculate_ritual_streak(p_ritual_id UUID, p_frequency_type VARCHAR)
+RETURNS INT AS $$
+DECLARE
+  v_streak INT := 0;
+  v_last_date DATE;
+  v_expected_date DATE;
+  v_completion_dates DATE[];
+BEGIN
+  -- Get all completion dates ordered desc
+  SELECT ARRAY_AGG(completed_date ORDER BY completed_date DESC)
+  INTO v_completion_dates
+  FROM ritual_completions
+  WHERE ritual_id = p_ritual_id;
+  
+  -- If no completions, return 0
+  IF v_completion_dates IS NULL OR array_length(v_completion_dates, 1) = 0 THEN
+    RETURN 0;
+  END IF;
+  
+  -- Simple streak calculation (consecutive days for daily, weeks for weekly, etc.)
+  -- For now, simplified version - can be enhanced based on frequency_type
+  v_last_date := v_completion_dates[1];
+  v_streak := 1;
+  
+  FOR i IN 2..array_length(v_completion_dates, 1) LOOP
+    v_expected_date := v_last_date - INTERVAL '1 day';
+    
+    IF p_frequency_type = 'daily' THEN
+      v_expected_date := v_last_date - INTERVAL '1 day';
+    ELSIF p_frequency_type = 'weekly' THEN
+      v_expected_date := v_last_date - INTERVAL '7 days';
+    ELSIF p_frequency_type = 'monthly' THEN
+      v_expected_date := v_last_date - INTERVAL '1 month';
+    ELSIF p_frequency_type = 'yearly' THEN
+      v_expected_date := v_last_date - INTERVAL '1 year';
+    ELSE
+      v_expected_date := v_last_date - INTERVAL '1 day';
+    END IF;
+    
+    IF v_completion_dates[i] = v_expected_date::DATE THEN
+      v_streak := v_streak + 1;
+      v_last_date := v_completion_dates[i];
+    ELSE
+      EXIT;
+    END IF;
+  END LOOP;
+  
+  RETURN v_streak;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update ritual streak after completion
+CREATE OR REPLACE FUNCTION update_ritual_streak()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_frequency_type VARCHAR;
+  v_new_streak INT;
+BEGIN
+  -- Get frequency type
+  SELECT frequency_type INTO v_frequency_type
+  FROM rituals
+  WHERE id = NEW.ritual_id;
+  
+  -- Calculate new streak
+  v_new_streak := calculate_ritual_streak(NEW.ritual_id, v_frequency_type);
+  
+  -- Update ritual
+  UPDATE rituals
+  SET 
+    last_done = NEW.completed_date,
+    streak_current = v_new_streak,
+    streak_longest = GREATEST(streak_longest, v_new_streak)
+  WHERE id = NEW.ritual_id;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS after_ritual_completion ON ritual_completions;
+CREATE TRIGGER after_ritual_completion
+  AFTER INSERT ON ritual_completions
+  FOR EACH ROW
+  EXECUTE FUNCTION update_ritual_streak();
+
+-- RLS Policies for bucket_list_items
+DROP POLICY IF EXISTS "Users can view their couple bucket list" ON bucket_list_items;
+CREATE POLICY "Users can view their couple bucket list"
+  ON bucket_list_items FOR SELECT
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert bucket items for their couple" ON bucket_list_items;
+CREATE POLICY "Users can insert bucket items for their couple"
+  ON bucket_list_items FOR INSERT
+  WITH CHECK (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+    AND created_by = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can update bucket items in their couple" ON bucket_list_items;
+CREATE POLICY "Users can update bucket items in their couple"
+  ON bucket_list_items FOR UPDATE
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete bucket items they created" ON bucket_list_items;
+CREATE POLICY "Users can delete bucket items they created"
+  ON bucket_list_items FOR DELETE
+  USING (created_by = auth.uid());
+
+-- RLS Policies for wishlist_items
+DROP POLICY IF EXISTS "Users can view wishlists in their couple" ON wishlist_items;
+CREATE POLICY "Users can view wishlists in their couple"
+  ON wishlist_items FOR SELECT
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert items to their own wishlist" ON wishlist_items;
+CREATE POLICY "Users can insert items to their own wishlist"
+  ON wishlist_items FOR INSERT
+  WITH CHECK (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+    AND user_id = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can update their own wishlist items" ON wishlist_items;
+CREATE POLICY "Users can update their own wishlist items"
+  ON wishlist_items FOR UPDATE
+  USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Partner can mark items as purchased" ON wishlist_items;
+CREATE POLICY "Partner can mark items as purchased"
+  ON wishlist_items FOR UPDATE
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+    AND user_id != auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can delete their own wishlist items" ON wishlist_items;
+CREATE POLICY "Users can delete their own wishlist items"
+  ON wishlist_items FOR DELETE
+  USING (user_id = auth.uid());
+
+-- RLS Policies for rituals
+DROP POLICY IF EXISTS "Users can view their couple rituals" ON rituals;
+CREATE POLICY "Users can view their couple rituals"
+  ON rituals FOR SELECT
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert rituals for their couple" ON rituals;
+CREATE POLICY "Users can insert rituals for their couple"
+  ON rituals FOR INSERT
+  WITH CHECK (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+    AND created_by = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can update rituals in their couple" ON rituals;
+CREATE POLICY "Users can update rituals in their couple"
+  ON rituals FOR UPDATE
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete rituals they created" ON rituals;
+CREATE POLICY "Users can delete rituals they created"
+  ON rituals FOR DELETE
+  USING (created_by = auth.uid());
+
+-- RLS Policies for ritual_completions
+DROP POLICY IF EXISTS "Users can view completions of their couple rituals" ON ritual_completions;
+CREATE POLICY "Users can view completions of their couple rituals"
+  ON ritual_completions FOR SELECT
+  USING (
+    ritual_id IN (
+      SELECT id FROM rituals WHERE couple_id IN (
+        SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+      )
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert completions for their couple rituals" ON ritual_completions;
+CREATE POLICY "Users can insert completions for their couple rituals"
+  ON ritual_completions FOR INSERT
+  WITH CHECK (
+    ritual_id IN (
+      SELECT id FROM rituals WHERE couple_id IN (
+        SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+      )
+    )
+    AND completed_by = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can delete their own completions" ON ritual_completions;
+CREATE POLICY "Users can delete their own completions"
+  ON ritual_completions FOR DELETE
+  USING (completed_by = auth.uid());
