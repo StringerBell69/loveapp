@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+@theme {
+  /* Couleurs principales - Thème Amour */
+  --color-rose-pastel: #FFB3BA;
+  --color-rose-vif: #FF6B9D;
+  --color-lavande: #C7CEEA;
+  --color-peche: #FFC9B9;
+  --color-creme: #FFF5F0;
+  --color-corail: #FF8B94;
+
+  /* Couleurs fonctionnelles */
+  --color-success: #95E1D3;
+  --color-danger: #FF8B94;
+  --color-warning: #FFD93D;
+
+  /* Couleurs système (palette shadcn/ui compatible) */
+  --color-background: #FFF5F0;
+  --color-foreground: #4A4A4A;
+
+  --color-primary: #FF6B9D;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #FFB3BA;
+  --color-secondary-foreground: #4A4A4A;
+
+  --color-accent: #FFC9B9;
+  --color-accent-foreground: #4A4A4A;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #4A4A4A;
+
+  --color-muted: #F5E6E8;
+  --color-muted-foreground: #6B6B6B;
+
+  --color-border: #FFD6DC;
+  --color-input: #FFD6DC;
+  --color-ring: #FF6B9D;
+
+  --color-destructive: #FF8B94;
+  --color-destructive-foreground: #FFFFFF;
+
+  /* Border radius - Coins arrondis (doux) */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Fonts */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #FFF5F0;
+  --foreground: #4A4A4A;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* On garde le thème clair même en dark mode pour l'app romantique */
+    --background: #FFF5F0;
+    --foreground: #4A4A4A;
+  }
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family: var(--font-sans);
+}
+
+/* Utilities personnalisées pour le thème amour */
+@layer utilities {
+  .gradient-love {
+    background: linear-gradient(135deg, #FF6B9D 0%, #C7CEEA 100%);
+  }
+
+  .gradient-love-subtle {
+    background: linear-gradient(135deg, #FFB3BA 0%, #FFC9B9 100%);
+  }
+
+  .gradient-love-peach {
+    background: linear-gradient(135deg, #FF6B9D 0%, #FFC9B9 100%);
+  }
+
+  .shadow-love {
+    box-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+  }
+
+  .shadow-card {
+    box-shadow: 0 2px 12px rgba(255, 179, 186, 0.12);
+  }
+
+  .shadow-love-strong {
+    box-shadow: 0 8px 32px rgba(255, 107, 157, 0.25);
+  }
+}
+
+/* Animations personnalisées */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-heartbeat {
+    animation: heartbeat 1.5s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+}
+
+/* Transitions douces par défaut */
+* {
+  transition-duration: 300ms;
+  transition-timing-function: ease-out;
+}
+
+/* Amélioration des touch targets pour mobile */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
