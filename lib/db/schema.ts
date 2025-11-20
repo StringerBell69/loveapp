@@ -8,6 +8,9 @@ export const bucketListCategoryEnum = pgEnum("bucket_list_category", ["travel", 
 export const wishlistCategoryEnum = pgEnum("wishlist_category", ["tech", "fashion", "books", "hobbies", "home", "other"]);
 export const ritualFrequencyEnum = pgEnum("ritual_frequency", ["daily", "weekly", "monthly", "yearly", "custom"]);
 export const questionCategoryEnum = pgEnum("question_category", ["memories", "dreams", "love", "preferences", "reflection", "fun", "philosophy"]);
+export const themePaletteEnum = pgEnum("theme_palette", ["classic", "sunset", "ocean", "lavender", "forest"]);
+export const backupFormatEnum = pgEnum("backup_format", ["json", "pdf", "ics", "zip"]);
+export const analyticsEventTypeEnum = pgEnum("analytics_event_type", ["page_view", "feature_used", "error", "export", "backup", "login", "signup"]);
 
 // Table: couples
 export const couples = pgTable("couples", {
@@ -237,6 +240,84 @@ export const notificationSettings = pgTable("notification_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Table: user_preferences (Phase 5 - Personalization)
+export const userPreferences = pgTable("user_preferences", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => sql`auth.users(id)`, { onDelete: "cascade" }).notNull().unique(),
+  themePalette: themePaletteEnum("theme_palette").default("classic").notNull(),
+  darkMode: boolean("dark_mode").default(false).notNull(),
+  coupleAvatarUrl: text("couple_avatar_url"),
+  coupleName: varchar("couple_name", { length: 100 }),
+  backgroundImageUrl: text("background_image_url"),
+  language: varchar("language", { length: 10 }).default("fr").notNull(),
+  fontScale: integer("font_scale").default(100).notNull(), // 80-120%
+  reducedMotion: boolean("reduced_motion").default(false).notNull(),
+  highContrast: boolean("high_contrast").default(false).notNull(),
+  pushNotificationsEnabled: boolean("push_notifications_enabled").default(true).notNull(),
+  pushSubscription: jsonb("push_subscription"), // Web Push API subscription object
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Table: backups (Phase 5 - Backup/Restore)
+export const backups = pgTable("backups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  coupleId: uuid("couple_id").references(() => couples.id, { onDelete: "cascade" }).notNull(),
+  userId: uuid("user_id").references(() => sql`auth.users(id)`).notNull(), // Who initiated
+  format: backupFormatEnum("format").notNull(),
+  fileUrl: text("file_url").notNull(), // R2 storage URL
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileSize: integer("file_size"), // bytes
+  includesPhotos: boolean("includes_photos").default(false).notNull(),
+  dataSnapshot: jsonb("data_snapshot"), // Metadata about what was backed up
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Table: onboarding_progress (Phase 5 - User Onboarding)
+export const onboardingProgress = pgTable("onboarding_progress", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => sql`auth.users(id)`, { onDelete: "cascade" }).notNull().unique(),
+  hasCompletedTour: boolean("has_completed_tour").default(false).notNull(),
+  hasCreatedFirstEvent: boolean("has_created_first_event").default(false).notNull(),
+  hasUploadedFirstMemory: boolean("has_uploaded_first_memory").default(false).notNull(),
+  hasSentFirstMessage: boolean("has_sent_first_message").default(false).notNull(),
+  hasAddedBucketListItem: boolean("has_added_bucket_list_item").default(false).notNull(),
+  hasLoggedMood: boolean("has_logged_mood").default(false).notNull(),
+  hasAnsweredQuestion: boolean("has_answered_question").default(false).notNull(),
+  hasEnabledPushNotifications: boolean("has_enabled_push_notifications").default(false).notNull(),
+  currentStep: varchar("current_step", { length: 50 }).default("welcome"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Table: feature_flags (Phase 5 - Feature Rollout)
+export const featureFlags = pgTable("feature_flags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  flagKey: varchar("flag_key", { length: 100 }).notNull().unique(),
+  flagName: varchar("flag_name", { length: 255 }).notNull(),
+  description: text("description"),
+  isEnabled: boolean("is_enabled").default(false).notNull(),
+  rolloutPercentage: integer("rollout_percentage").default(0).notNull(), // 0-100
+  enabledForCouples: jsonb("enabled_for_couples"), // Array of couple IDs
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Table: analytics_events (Phase 5 - Usage Analytics)
+export const analyticsEvents = pgTable("analytics_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => sql`auth.users(id)`, { onDelete: "cascade" }),
+  coupleId: uuid("couple_id").references(() => couples.id, { onDelete: "cascade" }),
+  eventType: analyticsEventTypeEnum("event_type").notNull(),
+  eventName: varchar("event_name", { length: 100 }).notNull(),
+  eventData: jsonb("event_data"), // Additional metadata
+  page: varchar("page", { length: 255 }),
+  sessionId: varchar("session_id", { length: 100 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // Types for TypeScript
 export type Couple = typeof couples.$inferSelect;
 export type NewCouple = typeof couples.$inferInsert;
@@ -294,3 +375,18 @@ export type NewQuestionReaction = typeof questionReactions.$inferInsert;
 
 export type NotificationSettings = typeof notificationSettings.$inferSelect;
 export type NewNotificationSettings = typeof notificationSettings.$inferInsert;
+
+export type UserPreference = typeof userPreferences.$inferSelect;
+export type NewUserPreference = typeof userPreferences.$inferInsert;
+
+export type Backup = typeof backups.$inferSelect;
+export type NewBackup = typeof backups.$inferInsert;
+
+export type OnboardingProgress = typeof onboardingProgress.$inferSelect;
+export type NewOnboardingProgress = typeof onboardingProgress.$inferInsert;
+
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type NewFeatureFlag = typeof featureFlags.$inferInsert;
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type NewAnalyticsEvent = typeof analyticsEvents.$inferInsert;
