@@ -2,6 +2,8 @@
 ALTER TABLE couples ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE love_notes ENABLE ROW LEVEL SECURITY;
 
 -- Function to generate unique couple code
 CREATE OR REPLACE FUNCTION generate_couple_code()
@@ -129,4 +131,84 @@ CREATE POLICY "Users can delete events of their couple"
     couple_id IN (
       SELECT couple_id FROM user_profiles WHERE id = auth.uid()
     )
+  );
+
+-- Trigger on memories table
+DROP TRIGGER IF EXISTS update_memories_updated_at ON memories;
+CREATE TRIGGER update_memories_updated_at
+  BEFORE UPDATE ON memories
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- RLS Policies for memories
+DROP POLICY IF EXISTS "Users can view their couple memories" ON memories;
+CREATE POLICY "Users can view their couple memories"
+  ON memories FOR SELECT
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert memories for their couple" ON memories;
+CREATE POLICY "Users can insert memories for their couple"
+  ON memories FOR INSERT
+  WITH CHECK (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can update memories of their couple" ON memories;
+CREATE POLICY "Users can update memories of their couple"
+  ON memories FOR UPDATE
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete memories of their couple" ON memories;
+CREATE POLICY "Users can delete memories of their couple"
+  ON memories FOR DELETE
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+-- RLS Policies for love_notes
+DROP POLICY IF EXISTS "Users can view their couple messages" ON love_notes;
+CREATE POLICY "Users can view their couple messages"
+  ON love_notes FOR SELECT
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert messages for their couple" ON love_notes;
+CREATE POLICY "Users can insert messages for their couple"
+  ON love_notes FOR INSERT
+  WITH CHECK (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+    AND from_user_id = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Users can update messages in their couple" ON love_notes;
+CREATE POLICY "Users can update messages in their couple"
+  ON love_notes FOR UPDATE
+  USING (
+    couple_id IN (
+      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete their own messages" ON love_notes;
+CREATE POLICY "Users can delete their own messages"
+  ON love_notes FOR DELETE
+  USING (
+    from_user_id = auth.uid()
   );
