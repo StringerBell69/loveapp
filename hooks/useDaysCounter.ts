@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { differenceInDays, format, addYears } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useCouple } from "./useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 
 export function useDaysCounter() {
   const { couple } = useCouple();

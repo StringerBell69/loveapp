@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database.types";
-import { useCouple } from "./useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 type EventInsert = Database["public"]["Tables"]["events"]["Insert"];

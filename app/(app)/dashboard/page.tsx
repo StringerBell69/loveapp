@@ -9,7 +9,7 @@ import { DaysCounter } from "@/components/dashboard/DaysCounter";
 import { UpcomingEvents } from "@/components/dashboard/UpcomingEvents";
 import { LastMemoryCard } from "@/components/dashboard/LastMemoryCard";
 import { UnreadMessagesCard } from "@/components/dashboard/UnreadMessagesCard";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { fadeIn, staggerContainer, staggerItem } from "@/lib/animations";
 
 export default function DashboardPage() {

@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useCouple } from "./useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import type { LoveNote } from "@/lib/db/schema";
 
 export function useRealtimeMessages(onNewMessage?: (message: LoveNote) => void) {

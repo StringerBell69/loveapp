@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { MobileHeader } from "@/components/layout/MobileHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { fadeIn, slideUp, staggerContainer, staggerItem } from "@/lib/animations";
 
 export default function SettingsPage() {

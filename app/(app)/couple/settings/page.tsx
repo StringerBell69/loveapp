@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MobileHeader } from "@/components/layout/MobileHeader";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { useToast } from "@/components/ui/use-toast";
 import { fadeIn, slideUp } from "@/lib/animations";
 

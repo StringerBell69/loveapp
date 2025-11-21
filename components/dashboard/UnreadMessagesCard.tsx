@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMessages } from "@/hooks/useMessages";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function DebugPage() {
