@@ -62,27 +62,23 @@ Les clés VAPID sont déjà générées par quickstart.sh!
 
 ---
 
-## 💾 Étape 3: Base de Données (1 min)
+## 💾 Étape 3: Base de Données (30 secondes!)
 
-### A. Push le schema
+### Configuration automatique en 1 commande:
 
 ```bash
-bun db:push
+bun db:init
 ```
 
-✅ Crée les 25 tables automatiquement!
+✅ Cette commande fait TOUT automatiquement:
+- Crée les 25 tables (schema push)
+- Crée les 5 fonctions SQL
+- Crée les 6 triggers
+- Applique les politiques RLS (25 tables)
+- Seed les 70 questions
+- Crée les 20+ indexes
 
-### B. Exécuter les fonctions SQL
-
-Aller dans **Supabase Dashboard** → **SQL Editor**
-
-Copier-coller et exécuter ces 3 fichiers dans l'ordre:
-
-1. **setup-functions.sql** (fonctions et triggers)
-2. **rls-policies.sql** (sécurité)
-3. **seed-questions.sql** (70 questions)
-
-Tous les fichiers sont dans `lib/db/`
+**Plus besoin d'aller dans Supabase Dashboard!** 🎉
 
 ---
 
@@ -102,8 +98,7 @@ Ouvrir: **http://localhost:3000**
 - [ ] Projet Supabase créé
 - [ ] Bucket R2 créé
 - [ ] `.env.local` rempli avec credentials
-- [ ] `bun db:push` réussi
-- [ ] 3 fichiers SQL exécutés dans Supabase
+- [ ] `bun db:init` réussi (tables + fonctions + RLS + seeds)
 - [ ] `bun dev` lance l'app
 - [ ] http://localhost:3000 fonctionne
 
