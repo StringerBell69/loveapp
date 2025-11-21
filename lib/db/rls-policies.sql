@@ -29,6 +29,16 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- ============================================
+-- HELPER FUNCTION: Get user's couple_id (bypasses RLS)
+-- ============================================
+-- This function prevents infinite recursion in RLS policies
+-- by using SECURITY DEFINER to bypass RLS when checking couple_id
+CREATE OR REPLACE FUNCTION public.get_user_couple_id()
+RETURNS UUID AS $$
+  SELECT couple_id FROM public.user_profiles WHERE id = auth.uid()
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
 -- Function to generate unique couple code
 CREATE OR REPLACE FUNCTION generate_couple_code()
 RETURNS VARCHAR(6) AS $$
@@ -90,30 +100,18 @@ CREATE POLICY "Users can insert own profile"
 DROP POLICY IF EXISTS "Users can view profiles in their couple" ON user_profiles;
 CREATE POLICY "Users can view profiles in their couple"
   ON user_profiles FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 -- RLS Policies for couples
 DROP POLICY IF EXISTS "Users can view their couple" ON couples;
 CREATE POLICY "Users can view their couple"
   ON couples FOR SELECT
-  USING (
-    id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can update their couple" ON couples;
 CREATE POLICY "Users can update their couple"
   ON couples FOR UPDATE
-  USING (
-    id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert couples" ON couples;
 CREATE POLICY "Users can insert couples"
@@ -124,38 +122,22 @@ CREATE POLICY "Users can insert couples"
 DROP POLICY IF EXISTS "Users can view their couple events" ON events;
 CREATE POLICY "Users can view their couple events"
   ON events FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert events for their couple" ON events;
 CREATE POLICY "Users can insert events for their couple"
   ON events FOR INSERT
-  WITH CHECK (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  WITH CHECK (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can update events of their couple" ON events;
 CREATE POLICY "Users can update events of their couple"
   ON events FOR UPDATE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can delete events of their couple" ON events;
 CREATE POLICY "Users can delete events of their couple"
   ON events FOR DELETE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 -- Trigger on memories table
 DROP TRIGGER IF EXISTS update_memories_updated_at ON memories;
@@ -168,67 +150,41 @@ CREATE TRIGGER update_memories_updated_at
 DROP POLICY IF EXISTS "Users can view their couple memories" ON memories;
 CREATE POLICY "Users can view their couple memories"
   ON memories FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert memories for their couple" ON memories;
 CREATE POLICY "Users can insert memories for their couple"
   ON memories FOR INSERT
-  WITH CHECK (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  WITH CHECK (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can update memories of their couple" ON memories;
 CREATE POLICY "Users can update memories of their couple"
   ON memories FOR UPDATE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can delete memories of their couple" ON memories;
 CREATE POLICY "Users can delete memories of their couple"
   ON memories FOR DELETE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 -- RLS Policies for love_notes
 DROP POLICY IF EXISTS "Users can view their couple messages" ON love_notes;
 CREATE POLICY "Users can view their couple messages"
   ON love_notes FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert messages for their couple" ON love_notes;
 CREATE POLICY "Users can insert messages for their couple"
   ON love_notes FOR INSERT
   WITH CHECK (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
+    couple_id = public.get_user_couple_id()
     AND from_user_id = auth.uid()
   );
 
 DROP POLICY IF EXISTS "Users can update messages in their couple" ON love_notes;
 CREATE POLICY "Users can update messages in their couple"
   ON love_notes FOR UPDATE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can delete their own messages" ON love_notes;
 CREATE POLICY "Users can delete their own messages"
@@ -345,30 +301,20 @@ CREATE TRIGGER after_ritual_completion
 DROP POLICY IF EXISTS "Users can view their couple bucket list" ON bucket_list_items;
 CREATE POLICY "Users can view their couple bucket list"
   ON bucket_list_items FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert bucket items for their couple" ON bucket_list_items;
 CREATE POLICY "Users can insert bucket items for their couple"
   ON bucket_list_items FOR INSERT
   WITH CHECK (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
+    couple_id = public.get_user_couple_id()
     AND created_by = auth.uid()
   );
 
 DROP POLICY IF EXISTS "Users can update bucket items in their couple" ON bucket_list_items;
 CREATE POLICY "Users can update bucket items in their couple"
   ON bucket_list_items FOR UPDATE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can delete bucket items they created" ON bucket_list_items;
 CREATE POLICY "Users can delete bucket items they created"
@@ -379,19 +325,13 @@ CREATE POLICY "Users can delete bucket items they created"
 DROP POLICY IF EXISTS "Users can view wishlists in their couple" ON wishlist_items;
 CREATE POLICY "Users can view wishlists in their couple"
   ON wishlist_items FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert items to their own wishlist" ON wishlist_items;
 CREATE POLICY "Users can insert items to their own wishlist"
   ON wishlist_items FOR INSERT
   WITH CHECK (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
+    couple_id = public.get_user_couple_id()
     AND user_id = auth.uid()
   );
 
@@ -404,9 +344,7 @@ DROP POLICY IF EXISTS "Partner can mark items as purchased" ON wishlist_items;
 CREATE POLICY "Partner can mark items as purchased"
   ON wishlist_items FOR UPDATE
   USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
+    couple_id = public.get_user_couple_id()
     AND user_id != auth.uid()
   );
 
@@ -419,30 +357,20 @@ CREATE POLICY "Users can delete their own wishlist items"
 DROP POLICY IF EXISTS "Users can view their couple rituals" ON rituals;
 CREATE POLICY "Users can view their couple rituals"
   ON rituals FOR SELECT
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can insert rituals for their couple" ON rituals;
 CREATE POLICY "Users can insert rituals for their couple"
   ON rituals FOR INSERT
   WITH CHECK (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
+    couple_id = public.get_user_couple_id()
     AND created_by = auth.uid()
   );
 
 DROP POLICY IF EXISTS "Users can update rituals in their couple" ON rituals;
 CREATE POLICY "Users can update rituals in their couple"
   ON rituals FOR UPDATE
-  USING (
-    couple_id IN (
-      SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-    )
-  );
+  USING (couple_id = public.get_user_couple_id());
 
 DROP POLICY IF EXISTS "Users can delete rituals they created" ON rituals;
 CREATE POLICY "Users can delete rituals they created"
@@ -455,9 +383,7 @@ CREATE POLICY "Users can view completions of their couple rituals"
   ON ritual_completions FOR SELECT
   USING (
     ritual_id IN (
-      SELECT id FROM rituals WHERE couple_id IN (
-        SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-      )
+      SELECT id FROM rituals WHERE couple_id = public.get_user_couple_id()
     )
   );
 
@@ -466,9 +392,7 @@ CREATE POLICY "Users can insert completions for their couple rituals"
   ON ritual_completions FOR INSERT
   WITH CHECK (
     ritual_id IN (
-      SELECT id FROM rituals WHERE couple_id IN (
-        SELECT couple_id FROM user_profiles WHERE id = auth.uid()
-      )
+      SELECT id FROM rituals WHERE couple_id = public.get_user_couple_id()
     )
     AND completed_by = auth.uid()
   );
