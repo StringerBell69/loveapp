@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useCouple } from "./useCouple";
 import { useAuth } from "./useAuth";
 import type { WishlistItem, NewWishlistItem } from "@/lib/db/schema";
@@ -13,7 +13,7 @@ export function useWishlist() {
   const [loading, setLoading] = useState(true);
   const { couple, partner } = useCouple();
   const { user } = useAuth();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     if (!couple?.id || !user?.id) {

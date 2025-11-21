@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useCouple } from "./useCouple";
 import type { Memory, NewMemory } from "@/lib/db/schema";
 
@@ -10,7 +10,7 @@ export function useMemories() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
   const { couple } = useCouple();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   // Fetch memories
   useEffect(() => {

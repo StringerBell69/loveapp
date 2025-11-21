@@ -2,14 +2,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useCouple } from "./useCouple";
 import type { LoveNote } from "@/lib/db/schema";
 
 export function useRealtimeMessages(onNewMessage?: (message: LoveNote) => void) {
   const [isTyping, setIsTyping] = useState(false);
   const { couple } = useCouple();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     if (!couple?.id) return;

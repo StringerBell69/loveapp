@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useCouple } from "./useCouple";
 import type { LoveNote, NewLoveNote } from "@/lib/db/schema";
 
@@ -11,7 +11,7 @@ export function useMessages() {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const { couple } = useCouple();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   // Fetch messages
   useEffect(() => {

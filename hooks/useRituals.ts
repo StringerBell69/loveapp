@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useCouple } from "./useCouple";
 import { useAuth } from "./useAuth";
 import type { Ritual, NewRitual, RitualCompletion } from "@/lib/db/schema";
@@ -13,7 +13,7 @@ export function useRituals() {
   const [loading, setLoading] = useState(true);
   const { couple } = useCouple();
   const { user } = useAuth();
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     if (!couple?.id) {
