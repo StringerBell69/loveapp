@@ -9,6 +9,26 @@ ALTER TABLE wishlist_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rituals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ritual_completions ENABLE ROW LEVEL SECURITY;
 
+-- ============================================
+-- TRIGGER: Auto-create user profile on signup
+-- ============================================
+-- This function creates a user_profiles row automatically when a new user signs up
+-- This avoids RLS issues when trying to create profile from client
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, name)
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'name', 'User'));
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to automatically create profile on signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- Function to generate unique couple code
 CREATE OR REPLACE FUNCTION generate_couple_code()
 RETURNS VARCHAR(6) AS $$
