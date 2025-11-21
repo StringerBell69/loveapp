@@ -72,7 +72,29 @@ mkdir -p public/screenshots
 
 ## 💾 Configuration de la Base de Données
 
-### 1. Migrer le schéma
+### Méthode Automatique (Recommandée) ⚡
+
+**1 seule commande pour TOUT faire:**
+
+```bash
+bun db:init
+```
+
+Cette commande fait automatiquement:
+- ✅ Push le schema Drizzle (25 tables)
+- ✅ Crée les 5 fonctions SQL
+- ✅ Crée les 6 triggers
+- ✅ Applique les politiques RLS (25 tables)
+- ✅ Seed les 70 questions
+- ✅ Crée les 20+ indexes
+
+**C'est tout! Plus besoin d'aller dans Supabase Dashboard!** 🎉
+
+---
+
+### Méthode Manuelle (si vous préférez)
+
+#### 1. Migrer le schéma
 
 ```bash
 bun db:push
@@ -84,20 +106,19 @@ Cette commande crée toutes les tables:
 - daily_moods, gratitude_entries, daily_questions, question_answers, etc.
 - user_preferences, backups, onboarding_progress, feature_flags, analytics_events
 
-### 2. Appliquer les fonctions et triggers SQL
+#### 2. Setup automatique des fonctions/RLS/seeds
 
-Aller dans **Supabase Dashboard** → **SQL Editor** → **New query**
-
-Copier-coller et exécuter le contenu de:
-```
-lib/db/setup-functions.sql
+```bash
+bun db:setup
 ```
 
-Ce fichier crée:
-- ✅ `calculate_ritual_streak()` - Calcul des streaks de rituels
-- ✅ `generate_daily_question()` - Génération de question quotidienne
-- ✅ `get_gratitude_streak()` - Calcul des streaks de gratitude
-- ✅ `get_couple_stats()` - Statistiques complètes du couple
+Ou manuellement dans Supabase Dashboard → SQL Editor:
+
+1. Exécuter `lib/db/setup-functions.sql`
+   - ✅ `calculate_ritual_streak()` - Calcul des streaks de rituels
+   - ✅ `generate_daily_question()` - Génération de question quotidienne
+   - ✅ `get_gratitude_streak()` - Calcul des streaks de gratitude
+   - ✅ `get_couple_stats()` - Statistiques complètes du couple
 - ✅ `update_onboarding_milestone()` - Suivi automatique de progression
 - ✅ Tous les triggers nécessaires
 - ✅ Tous les indexes de performance
@@ -236,14 +257,15 @@ bun build            # Build pour production
 bun start            # Lancer la version build
 bun lint             # Linter le code
 
-# Database
+# Database - Setup Complet
+bun db:init          # 🚀 TOUT EN 1: push + setup + RLS + seeds
+bun db:setup         # Setup SQL (fonctions + RLS + seeds seulement)
+
+# Database - Commandes Individuelles
 bun db:push          # Push le schema Drizzle vers Supabase
 bun db:pull          # Pull le schema depuis Supabase
 bun db:generate      # Générer les migrations Drizzle
 bun db:studio        # Ouvrir Drizzle Studio (interface visuelle DB)
-
-# Nettoyage
-bun run clean        # Nettoyer les fichiers build
 ```
 
 ---

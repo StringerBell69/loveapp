@@ -11,7 +11,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:setup": "bun run scripts/setup-db.ts",
+    "db:init": "bun db:push && bun db:setup"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.936.0",
