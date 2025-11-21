@@ -17,56 +17,60 @@ export function useCouple() {
   const { user } = useAuth();
   const supabase = createClient();
 
-  useEffect(() => {
+  const fetchCoupleData = async () => {
     if (!user) {
       setLoading(false);
       return;
     }
 
-    const fetchCoupleData = async () => {
-      try {
-        // Get user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("user_profiles")
+    try {
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      setProfile(profileData as UserProfile);
+
+      if ((profileData as UserProfile)?.couple_id) {
+        // Get couple data
+        const { data: coupleData, error: coupleError } = await supabase
+          .from("couples")
           .select("*")
-          .eq("id", user.id)
+          .eq("id", (profileData as UserProfile).couple_id!)
           .single();
 
-        if (profileError) throw profileError;
-        setProfile(profileData as UserProfile);
+        if (coupleError) throw coupleError;
+        setCouple(coupleData as Couple);
 
-        if ((profileData as UserProfile)?.couple_id) {
-          // Get couple data
-          const { data: coupleData, error: coupleError } = await supabase
-            .from("couples")
-            .select("*")
-            .eq("id", (profileData as UserProfile).couple_id!)
-            .single();
+        // Get partner profile
+        const { data: partnerData, error: partnerError } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("couple_id", (profileData as UserProfile).couple_id!)
+          .neq("id", user.id)
+          .single();
 
-          if (coupleError) throw coupleError;
-          setCouple(coupleData as Couple);
-
-          // Get partner profile
-          const { data: partnerData, error: partnerError } = await supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("couple_id", (profileData as UserProfile).couple_id!)
-            .neq("id", user.id)
-            .single();
-
-          if (!partnerError && partnerData) {
-            setPartnerProfile(partnerData as UserProfile);
-          }
+        if (!partnerError && partnerData) {
+          setPartnerProfile(partnerData as UserProfile);
         }
-      } catch (error) {
-        console.error("Error fetching couple data:", error);
-      } finally {
-        setLoading(false);
+      } else {
+        // Clear couple state if no couple_id
+        setCouple(null);
+        setPartnerProfile(null);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching couple data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCoupleData();
-  }, [user, supabase]);
+  }, [user]);
 
   const createCouple = async (anniversaryDate?: string): Promise<Couple> => {
     if (!user) throw new Error("User not authenticated");
@@ -100,11 +104,8 @@ export function useCouple() {
 
     if (profileError) throw profileError;
 
-    // Update local state with both couple and updated profile
-    setCouple(coupleData as Couple);
-    if (profile) {
-      setProfile({ ...profile, couple_id: coupleData.id } as UserProfile);
-    }
+    // Refresh all couple data from database
+    await fetchCoupleData();
 
     return coupleData as Couple;
   };
@@ -140,11 +141,8 @@ export function useCouple() {
 
     if (profileError) throw profileError;
 
-    // Update local state with both couple and updated profile
-    setCouple(coupleData as Couple);
-    if (profile) {
-      setProfile({ ...profile, couple_id: coupleData.id } as UserProfile);
-    }
+    // Refresh all couple data from database
+    await fetchCoupleData();
 
     return coupleData as Couple;
   };
@@ -181,11 +179,13 @@ export function useCouple() {
   return {
     couple,
     profile,
+    partner: partnerProfile, // Alias for consistency
     partnerProfile,
     loading,
     createCouple,
     joinCouple,
     updateCouple,
     leaveCouple,
+    refresh: fetchCoupleData,
   };
 }

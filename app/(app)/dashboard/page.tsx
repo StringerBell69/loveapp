@@ -17,12 +17,18 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to couple setup if not in a couple
+    // Only redirect after loading is complete AND there's definitely no couple
     if (!loading && !couple) {
-      router.push("/couple/setup");
+      // Add a small delay to ensure state has fully updated
+      const timer = setTimeout(() => {
+        router.push("/couple/setup");
+      }, 1000);
+
+      return () => clearTimeout(timer);
     }
   }, [couple, loading, router]);
 
+  // Show loading state while data is being fetched
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,8 +44,20 @@ export default function DashboardPage() {
     );
   }
 
+  // After loading, if no couple, return null (will redirect after timeout)
   if (!couple) {
-    return null; // Will redirect
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          className="text-center"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+        >
+          <div className="text-6xl mb-4">💕</div>
+          <p className="text-muted-foreground">Redirection...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
