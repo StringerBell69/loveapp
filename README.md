@@ -9,6 +9,29 @@ Une application web progressive (PWA) complète pour couples, construite avec Ne
 
 ---
 
+## 📚 Documentation Complète
+
+**Guides de Démarrage:**
+- **[START.md](START.md)** ⚡ - Démarrage ultra-rapide (5 min)
+- **[SETUP.md](SETUP.md)** 📖 - Guide complet de configuration step-by-step
+- **[COMMANDES.md](COMMANDES.md)** 📋 - Toutes les commandes à copier-coller
+- **[TEST-DB-PUSH.md](TEST-DB-PUSH.md)** 🧪 - Guide de test du push database
+
+**Guides d'Implémentation:**
+- **[PHASE3_IMPLEMENTATION.md](PHASE3_IMPLEMENTATION.md)** - Planning & Projets
+- **[PHASE4_IMPLEMENTATION.md](PHASE4_IMPLEMENTATION.md)** - Émotionnel & Connaissance
+- **[PHASE5_IMPLEMENTATION.md](PHASE5_IMPLEMENTATION.md)** - Bonus & Polish (PWA, Stats, Export)
+
+**Scripts d'Automatisation:**
+- **[quickstart.sh](quickstart.sh)** 🤖 - Installation automatique de toutes les dépendances
+
+**Fichiers SQL:**
+- **[setup-functions.sql](lib/db/setup-functions.sql)** - Fonctions et triggers database
+- **[rls-policies.sql](lib/db/rls-policies.sql)** - Politiques de sécurité RLS
+- **[seed-questions.sql](lib/db/seed-questions.sql)** - 70 questions quotidiennes
+
+---
+
 ## ✨ Features
 
 ### 📅 Phase 1 - Calendrier & Événements
