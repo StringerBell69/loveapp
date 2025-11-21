@@ -31,7 +31,7 @@ export default function LoginPage() {
         title: "Bienvenue ! 💕",
         description: "Connexion réussie",
       });
-      router.push("/");
+      // Redirect is handled by signIn function
     } catch (error: unknown) {
       const err = error as Error;
       toast({
