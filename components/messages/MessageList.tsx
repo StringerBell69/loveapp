@@ -66,7 +66,15 @@ export function MessageList({
   let currentGroup: { date: Date; messages: LoveNote[] } | null = null;
 
   messages.forEach((message) => {
-    const messageDate = new Date(message.createdAt);
+    // Handle both camelCase and snake_case field names from Supabase
+    const createdAt = (message as any).created_at || message.createdAt;
+    const messageDate = new Date(createdAt);
+
+    // Skip invalid dates
+    if (isNaN(messageDate.getTime())) {
+      console.warn("Invalid message date:", createdAt);
+      return;
+    }
 
     if (!currentGroup || !isSameDay(currentGroup.date, messageDate)) {
       currentGroup = { date: messageDate, messages: [message] };
@@ -91,14 +99,17 @@ export function MessageList({
           </div>
 
           {/* Messages */}
-          {group.messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isFromCurrentUser={message.fromUserId === currentUserId}
-              partnerName={partnerName}
-            />
-          ))}
+          {group.messages.map((message) => {
+            const fromUserId = (message as any).from_user_id || message.fromUserId;
+            return (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isFromCurrentUser={fromUserId === currentUserId}
+                partnerName={partnerName}
+              />
+            );
+          })}
         </div>
       ))}
 

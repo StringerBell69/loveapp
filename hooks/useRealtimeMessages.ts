@@ -40,8 +40,9 @@ export function useRealtimeMessages(onNewMessage?: (message: LoveNote) => void) 
             Notification.permission === "granted"
           ) {
             // Only notify if message is for current user
+            const toUserId = (newMessage as any).to_user_id || newMessage.toUserId;
             supabase.auth.getUser().then(({ data }) => {
-              if (data.user && newMessage.toUserId === data.user.id) {
+              if (data.user && toUserId === data.user.id) {
                 new Notification("Nouveau message 💕", {
                   body: newMessage.message,
                   icon: "/icon-192.png",

@@ -17,7 +17,9 @@ export function MessageBubble({
   isFromCurrentUser,
   partnerName,
 }: MessageBubbleProps) {
-  const formattedTime = format(new Date(message.createdAt), "HH:mm", {
+  // Handle both camelCase and snake_case field names from Supabase
+  const createdAt = (message as any).created_at || message.createdAt;
+  const formattedTime = format(new Date(createdAt), "HH:mm", {
     locale: fr,
   });
 
@@ -55,7 +57,7 @@ export function MessageBubble({
           <span className="text-xs text-gray-400">{formattedTime}</span>
           {isFromCurrentUser && (
             <span className="text-gray-400">
-              {message.isRead ? (
+              {((message as any).is_read || message.isRead) ? (
                 <CheckCheck className="h-3 w-3 text-rose-vif" />
               ) : (
                 <Check className="h-3 w-3" />

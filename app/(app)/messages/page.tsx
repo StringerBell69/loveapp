@@ -20,7 +20,9 @@ export default function MessagesPage() {
       refetch();
 
       // Mark as read if message is for current user
-      if (user && newMessage.toUserId === user.id && !newMessage.isRead) {
+      const toUserId = (newMessage as any).to_user_id || newMessage.toUserId;
+      const isRead = (newMessage as any).is_read || newMessage.isRead;
+      if (user && toUserId === user.id && !isRead) {
         setTimeout(() => {
           markAsRead(newMessage.id);
         }, 1000);
@@ -31,7 +33,9 @@ export default function MessagesPage() {
   useEffect(() => {
     if (user && messages.length > 0) {
       messages.forEach((message) => {
-        if (message.toUserId === user.id && !message.isRead) {
+        const toUserId = (message as any).to_user_id || message.toUserId;
+        const isRead = (message as any).is_read || message.isRead;
+        if (toUserId === user.id && !isRead) {
           markAsRead(message.id);
         }
       });

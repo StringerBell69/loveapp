@@ -41,9 +41,11 @@ export function useMessages() {
       // Count unread messages
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
-        const unread = (data as LoveNote[]).filter(
-          (m) => m.toUserId === userData.user.id && !m.isRead
-        ).length;
+        const unread = (data as LoveNote[]).filter((m) => {
+          const toUserId = (m as any).to_user_id || m.toUserId;
+          const isRead = (m as any).is_read || m.isRead;
+          return toUserId === userData.user.id && !isRead;
+        }).length;
         setUnreadCount(unread);
       }
     } catch (error) {
@@ -138,11 +140,13 @@ export function useMessages() {
       if (error) throw error;
 
       setMessages((prev) =>
-        prev.map((m) =>
-          m.toUserId === userData.user.id && !m.isRead
+        prev.map((m) => {
+          const toUserId = (m as any).to_user_id || m.toUserId;
+          const isRead = (m as any).is_read || m.isRead;
+          return toUserId === userData.user.id && !isRead
             ? { ...m, isRead: true, readAt: new Date().toISOString() }
-            : m
-        )
+            : m;
+        })
       );
 
       setUnreadCount(0);
