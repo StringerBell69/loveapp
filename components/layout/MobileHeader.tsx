@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

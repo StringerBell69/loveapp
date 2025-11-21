@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useCouple } from "./useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { useAuth } from "./useAuth";
 import type { Ritual, NewRitual, RitualCompletion } from "@/lib/db/schema";
 

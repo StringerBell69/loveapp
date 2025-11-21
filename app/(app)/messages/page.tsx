@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useCouple } from "@/hooks/useCouple";
+import { useCouple } from "@/src/contexts/CoupleContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useRealtimeMessages } from "@/hooks/useRealtimeMessages";
 import { MessageList } from "@/components/messages/MessageList";

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { CoupleProvider } from "@/src/contexts/CoupleContext";
 
 export const metadata: Metadata = {
   title: "Notre Calendrier 💕 - Calendrier de Couple",
@@ -16,8 +17,10 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className="antialiased font-sans">
-        {children}
-        <Toaster />
+        <CoupleProvider>
+          {children}
+          <Toaster />
+        </CoupleProvider>
       </body>
     </html>
   );
