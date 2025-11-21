@@ -108,6 +108,15 @@ CREATE POLICY "Users can view their couple"
   ON couples FOR SELECT
   USING (id = public.get_user_couple_id());
 
+DROP POLICY IF EXISTS "Users can view couples without members" ON couples;
+CREATE POLICY "Users can view couples without members"
+  ON couples FOR SELECT
+  USING (
+    NOT EXISTS (
+      SELECT 1 FROM public.user_profiles WHERE couple_id = couples.id
+    )
+  );
+
 DROP POLICY IF EXISTS "Users can update their couple" ON couples;
 CREATE POLICY "Users can update their couple"
   ON couples FOR UPDATE
