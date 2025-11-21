@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MobileHeader } from "@/components/layout/MobileHeader";
@@ -15,21 +15,28 @@ import { fadeIn, staggerContainer, staggerItem } from "@/lib/animations";
 export default function DashboardPage() {
   const { couple, loading } = useCouple();
   const router = useRouter();
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    // Only redirect after loading is complete AND there's definitely no couple
-    if (!loading && !couple) {
-      // Add a small delay to ensure state has fully updated
-      const timer = setTimeout(() => {
-        router.push("/couple/setup");
-      }, 1000);
+    // Only perform redirect logic once loading is complete
+    if (!loading) {
+      console.log("Loading complete:", { couple: !!couple, hasChecked });
 
-      return () => clearTimeout(timer);
+      // Mark that we've completed the check
+      if (!hasChecked) {
+        setHasChecked(true);
+      }
+
+      // Redirect to couple setup if no couple exists
+      if (!couple) {
+        console.log("No couple found, redirecting to setup...");
+        router.push("/couple/setup");
+      }
     }
-  }, [couple, loading, router]);
+  }, [couple, loading, router, hasChecked]);
 
   // Show loading state while data is being fetched
-  if (loading) {
+  if (loading || !hasChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <motion.div
@@ -44,7 +51,7 @@ export default function DashboardPage() {
     );
   }
 
-  // After loading, if no couple, return null (will redirect after timeout)
+  // Show redirecting state if no couple (while redirect happens)
   if (!couple) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -60,6 +67,7 @@ export default function DashboardPage() {
     );
   }
 
+  // Only render dashboard when we have confirmed couple data
   return (
     <motion.div
       variants={fadeIn}

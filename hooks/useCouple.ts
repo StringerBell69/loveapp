@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database.types";
 import { useAuth } from "./useAuth";
@@ -15,13 +15,23 @@ export function useCouple() {
   const [partnerProfile, setPartnerProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const supabase = createClient();
 
-  const fetchCoupleData = async () => {
+  // Create supabase client once using useMemo
+  const supabase = useMemo(() => createClient(), []);
+
+  const fetchCoupleData = useCallback(async () => {
+    console.log('🔄 fetchCoupleData called, user:', user?.id);
+
     if (!user) {
+      console.log('❌ No user, clearing state');
+      setCouple(null);
+      setProfile(null);
+      setPartnerProfile(null);
       setLoading(false);
       return;
     }
+
+    setLoading(true);
 
     try {
       // Get user profile
@@ -31,10 +41,19 @@ export function useCouple() {
         .eq("id", user.id)
         .single();
 
-      if (profileError) throw profileError;
-      setProfile(profileData as UserProfile);
+      if (profileError) {
+        console.log('❌ Profile error:', profileError);
+        throw profileError;
+      }
+
+      console.log('✅ Got profile:', {
+        id: profileData.id,
+        couple_id: (profileData as UserProfile)?.couple_id
+      });
 
       if ((profileData as UserProfile)?.couple_id) {
+        console.log('📍 Fetching couple...');
+
         // Get couple data
         const { data: coupleData, error: coupleError } = await supabase
           .from("couples")
@@ -42,8 +61,12 @@ export function useCouple() {
           .eq("id", (profileData as UserProfile).couple_id!)
           .single();
 
-        if (coupleError) throw coupleError;
-        setCouple(coupleData as Couple);
+        if (coupleError) {
+          console.log('❌ Couple error:', coupleError);
+          throw coupleError;
+        }
+
+        console.log('✅ Got couple:', coupleData?.id);
 
         // Get partner profile
         const { data: partnerData, error: partnerError } = await supabase
@@ -53,24 +76,33 @@ export function useCouple() {
           .neq("id", user.id)
           .single();
 
-        if (!partnerError && partnerData) {
-          setPartnerProfile(partnerData as UserProfile);
-        }
+        // Update all state together before setting loading to false
+        console.log('✅ Setting couple state');
+        setProfile(profileData as UserProfile);
+        setCouple(coupleData as Couple);
+        setPartnerProfile(partnerError ? null : (partnerData as UserProfile));
+        setLoading(false);
       } else {
-        // Clear couple state if no couple_id
+        // No couple - update all state together
+        console.log('⚠️ No couple_id on profile');
+        setProfile(profileData as UserProfile);
         setCouple(null);
         setPartnerProfile(null);
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching couple data:", error);
-    } finally {
+      // On error, clear everything
+      setProfile(null);
+      setCouple(null);
+      setPartnerProfile(null);
       setLoading(false);
     }
-  };
+  }, [user, supabase]);
 
   useEffect(() => {
     fetchCoupleData();
-  }, [user]);
+  }, [fetchCoupleData]); // Depend on fetchCoupleData which depends on user and supabase
 
   const createCouple = async (anniversaryDate?: string): Promise<Couple> => {
     if (!user) throw new Error("User not authenticated");
