@@ -5,16 +5,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useMessages } from "@/hooks/useMessages";
 
 const navItems = [
   { href: "/", icon: Home, label: "Accueil" },
   { href: "/calendar", icon: Calendar, label: "Calendrier" },
-  { href: "/favorites", icon: Heart, label: "Favoris", disabled: true },
+  { href: "/messages", icon: Heart, label: "Messages" },
   { href: "/settings", icon: Settings, label: "Paramètres" },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { unreadCount } = useMessages();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border shadow-lg">
@@ -22,24 +24,37 @@ export function BottomNav() {
         {navItems.map((item, index) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
+          const isMessages = item.href === "/messages";
 
           // Center item (Plus) is handled differently
           if (index === 2) {
             return (
-              <div key={item.href} className="relative flex flex-col items-center justify-center flex-1">
+              <Link
+                key={item.href}
+                href={item.href}
+                className="relative flex flex-col items-center justify-center flex-1"
+              >
                 <motion.div
-                  className={cn(
-                    "absolute -top-8 w-14 h-14 rounded-full gradient-love shadow-love flex items-center justify-center",
-                    item.disabled && "opacity-50 cursor-not-allowed"
-                  )}
-                  whileTap={!item.disabled ? { scale: 0.9 } : undefined}
+                  className="absolute -top-8 w-14 h-14 rounded-full gradient-love shadow-love flex items-center justify-center"
+                  whileTap={{ scale: 0.9 }}
                 >
                   <Icon className="w-6 h-6 text-white" />
+
+                  {/* Unread badge for messages */}
+                  {isMessages && unreadCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-vif text-white flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </motion.div>
+                  )}
                 </motion.div>
                 <span className="text-xs text-muted-foreground mt-2 opacity-0">
                   {item.label}
                 </span>
-              </div>
+              </Link>
             );
           }
 
@@ -47,10 +62,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                "relative flex flex-col items-center justify-center flex-1 py-2 transition-colors",
-                item.disabled && "pointer-events-none opacity-50"
-              )}
+              className="relative flex flex-col items-center justify-center flex-1 py-2 transition-colors"
             >
               <motion.div
                 className="relative flex flex-col items-center"

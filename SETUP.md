@@ -5,7 +5,7 @@ Ce guide vous accompagne pas à pas dans la configuration de l'application.
 ## 📋 Prérequis
 
 - Node.js 18+ installé
-- npm ou yarn
+- npm, yarn ou **bun** (recommandé)
 - Un compte Supabase (gratuit)
 - Git
 
@@ -22,12 +22,15 @@ cd loveapp
 
 ```bash
 npm install
+# ou avec bun (recommandé)
+bun install
 ```
 
 Cela installera toutes les dépendances nécessaires :
 - Next.js 14
 - React 19
 - Supabase
+- **Drizzle ORM**
 - Framer Motion
 - TailwindCSS v4
 - date-fns
@@ -49,31 +52,18 @@ Cela installera toutes les dépendances nécessaires :
 5. Cliquer sur "Create new project"
 6. Attendre que le projet soit créé (2-3 minutes)
 
-### 2.2 Récupérer les clés API
+### 2.2 Récupérer les informations de connexion
 
 1. Dans le dashboard Supabase, aller dans **Settings** → **API**
-2. Copier les informations suivantes :
+2. Copier :
    - **Project URL** : `https://xxxxx.supabase.co`
    - **anon/public key** : `eyJhbG...` (une longue chaîne)
 
-### 2.3 Créer la base de données
+3. Aller dans **Settings** → **Database**
+4. Scroller jusqu'à **Connection string** → **URI**
+5. Copier l'URL de connexion (format : `postgresql://postgres:password@...`)
 
-1. Dans le dashboard Supabase, aller dans **SQL Editor**
-2. Cliquer sur "New query"
-3. Copier tout le contenu du fichier `supabase/migrations/001_initial_schema.sql`
-4. Coller dans l'éditeur SQL
-5. Cliquer sur "Run" (en bas à droite)
-6. Vérifier qu'il n'y a pas d'erreurs (message de succès)
-
-### 2.4 Vérifier la création des tables
-
-1. Aller dans **Table Editor**
-2. Vérifier que 3 tables sont créées :
-   - `couples`
-   - `user_profiles`
-   - `events`
-
-### 2.5 Configurer l'authentification
+### 2.3 Configurer l'authentification
 
 1. Aller dans **Authentication** → **Providers**
 2. S'assurer que "Email" est activé
@@ -81,30 +71,23 @@ Cela installera toutes les dépendances nécessaires :
 
 ## 🔑 Étape 3 : Variables d'Environnement
 
-### 3.1 Créer le fichier .env.local
-
-À la racine du projet, créer un fichier `.env.local` :
+### 3.1 Copier le fichier d'exemple
 
 ```bash
-touch .env.local
+cp .env.example .env.local
 ```
 
-### 3.2 Ajouter les variables
+### 3.2 Remplir les variables
 
-Ouvrir `.env.local` et ajouter :
+Ouvrir `.env.local` et remplacer les valeurs :
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=votre_url_projet_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anon_supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...votre_cle_anon
+DATABASE_URL=postgresql://postgres:votre_password@xxxxx.supabase.co:5432/postgres
 ```
 
-Remplacer les valeurs par celles récupérées à l'étape 2.2.
-
-**Exemple :**
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://abcdefgh.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+**Important** : Remplacer `votre_password` par le mot de passe de votre base de données Supabase.
 
 ### 3.3 Vérifier le fichier .gitignore
 
@@ -119,23 +102,67 @@ Si absent, l'ajouter :
 echo ".env.local" >> .gitignore
 ```
 
-## 🚀 Étape 4 : Lancer l'Application
+## 🗄️ Étape 4 : Push du Schéma de Base de Données
 
-### 4.1 Démarrer le serveur de développement
+### 4.1 Push avec Drizzle
+
+Avec npm :
+```bash
+npm run db:push
+```
+
+Avec bun (recommandé) :
+```bash
+bun db:push
+```
+
+Cette commande va :
+- Créer les tables `couples`, `user_profiles`, `events`
+- Créer l'enum `event_type`
+- Ajouter les contraintes et indexes
+
+### 4.2 Appliquer les RLS Policies
+
+1. Aller dans le dashboard Supabase
+2. Ouvrir **SQL Editor**
+3. Cliquer sur "New query"
+4. Copier tout le contenu de `lib/db/rls-policies.sql`
+5. Coller dans l'éditeur
+6. Cliquer sur "Run"
+
+Cela va activer :
+- Row Level Security (RLS) sur toutes les tables
+- Les policies de sécurité
+- La fonction `generate_couple_code()`
+- Le trigger `update_updated_at` sur la table events
+
+### 4.3 Vérifier les tables
+
+1. Aller dans **Table Editor** du dashboard Supabase
+2. Vérifier que 3 tables sont présentes :
+   - `couples` ✓
+   - `user_profiles` ✓
+   - `events` ✓
+
+## 🚀 Étape 5 : Lancer l'Application
+
+### 5.1 Démarrer le serveur de développement
 
 ```bash
 npm run dev
+# ou avec bun
+bun dev
 ```
 
-### 4.2 Accéder à l'application
+### 5.2 Accéder à l'application
 
 Ouvrir le navigateur à : [http://localhost:3000](http://localhost:3000)
 
 Vous devriez voir la page de connexion avec le thème romantique ! 💕
 
-## ✅ Étape 5 : Tester l'Application
+## ✅ Étape 6 : Tester l'Application
 
-### 5.1 Créer un compte
+### 6.1 Créer un compte
 
 1. Sur la page de connexion, cliquer sur "Créer un compte"
 2. Remplir :
@@ -145,7 +172,7 @@ Vous devriez voir la page de connexion avec le thème romantique ! 💕
    - **Confirmation** : Même mot de passe
 3. Cliquer sur "Créer mon compte"
 
-### 5.2 Créer ou rejoindre un couple
+### 6.2 Créer ou rejoindre un couple
 
 Vous serez redirigé vers `/couple/setup`
 
@@ -159,14 +186,14 @@ Vous serez redirigé vers `/couple/setup`
 1. Entrer le code partagé par votre partenaire
 2. Cliquer sur "Rejoindre"
 
-### 5.3 Explorer le dashboard
+### 6.3 Explorer le dashboard
 
 Vous devriez voir :
 - Le compteur de jours (si date anniversaire définie)
 - Les coeurs flottants en arrière-plan
 - La navigation en bas avec 5 onglets
 
-### 5.4 Créer un événement
+### 6.4 Créer un événement
 
 1. Cliquer sur le bouton "+" (FAB en bas à droite)
 2. Remplir le formulaire :
@@ -178,7 +205,7 @@ Vous devriez voir :
    - Couleur
 3. Cliquer sur "Créer"
 
-### 5.5 Voir le calendrier
+### 6.5 Voir le calendrier
 
 1. Cliquer sur l'onglet "Calendrier" en bas
 2. Voir le calendrier mensuel
@@ -197,11 +224,26 @@ Vous devriez voir :
 
 ### Erreur : "Table does not exist"
 
-**Solution** : Le script SQL n'a pas été exécuté. Retourner à l'étape 2.3
+**Solution** : Le schéma n'a pas été push. Exécuter :
+```bash
+npm run db:push
+# ou
+bun db:push
+```
 
-### Erreur : "Permission denied"
+### Erreur : "Permission denied" ou "RLS policy violation"
 
-**Solution** : Vérifier que RLS est bien activé. Aller dans Supabase → Table Editor → Cliquer sur une table → Authentication → Vérifier "Enable RLS"
+**Solution** : Les RLS policies n'ont pas été appliquées.
+1. Aller dans Supabase SQL Editor
+2. Exécuter le contenu de `lib/db/rls-policies.sql`
+3. Vérifier que RLS est activé sur les tables
+
+### Erreur de connexion à la base de données
+
+**Solution** : Vérifier le `DATABASE_URL` dans `.env.local` :
+- Format correct : `postgresql://postgres:password@project.supabase.co:5432/postgres`
+- Mot de passe sans caractères spéciaux encodés
+- Port 5432 (par défaut PostgreSQL)
 
 ### L'application ne se lance pas
 

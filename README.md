@@ -48,6 +48,7 @@ Application web mobile-first pour couples, permettant de partager et organiser v
 - **Styling**: TailwindCSS v4
 - **Animations**: Framer Motion
 - **Database**: Supabase PostgreSQL
+- **ORM**: Drizzle ORM
 - **Auth**: Supabase Auth
 - **Validation**: Zod
 - **Dates**: date-fns
@@ -60,28 +61,55 @@ Application web mobile-first pour couples, permettant de partager et organiser v
 git clone <repository-url>
 cd loveapp
 npm install
+# ou avec bun
+bun install
 ```
 
 ### 2. Configuration Supabase
 
 1. Créer un compte sur [supabase.com](https://supabase.com)
 2. Créer un nouveau projet
-3. Exécuter le script SQL : `supabase/migrations/001_initial_schema.sql`
-4. Récupérer l'URL et la clé ANON
+3. Récupérer :
+   - **Project URL** et **ANON key** (Settings > API)
+   - **Database URL** (Settings > Database > Connection string > URI)
 
 ### 3. Variables d'environnement
 
-Créer `.env.local` :
+Créer `.env.local` à partir de `.env.example` :
+
+```bash
+cp .env.example .env.local
+```
+
+Remplir les valeurs :
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+DATABASE_URL=postgresql://postgres:password@project.supabase.co:5432/postgres
 ```
 
-### 4. Lancer l'application
+### 4. Push du schéma de base de données
+
+```bash
+npm run db:push
+# ou avec bun
+bun db:push
+```
+
+Ensuite, exécuter les RLS policies dans le SQL Editor de Supabase :
+
+```bash
+# Copier le contenu de lib/db/rls-policies.sql
+# et l'exécuter dans Supabase SQL Editor
+```
+
+### 5. Lancer l'application
 
 ```bash
 npm run dev
+# ou avec bun
+bun dev
 ```
 
 Ouvrir [http://localhost:3000](http://localhost:3000)
@@ -100,9 +128,12 @@ loveapp/
 │   ├── dashboard/        # Dashboard
 │   └── calendar/         # Calendrier
 ├── hooks/                # Hooks React
-├── lib/                  # Utilitaires
+├── lib/
+│   ├── db/               # Drizzle ORM (schema, config, RLS)
+│   ├── supabase/         # Supabase client config
+│   └── utils/            # Utilitaires
 ├── types/                # Types TypeScript
-└── supabase/             # Migrations SQL
+└── drizzle.config.ts     # Config Drizzle Kit
 ```
 
 ## 🎨 Palette de Couleurs
@@ -124,12 +155,26 @@ Crème:       #FFF5F0
 
 ## 📝 Scripts
 
+### Application
+
 ```bash
 npm run dev      # Développement
 npm run build    # Build production
 npm run start    # Production
 npm run lint     # Linter
 ```
+
+### Base de données (Drizzle)
+
+```bash
+npm run db:push      # Push schema to database
+npm run db:pull      # Pull schema from database
+npm run db:generate  # Generate migrations
+npm run db:migrate   # Run migrations
+npm run db:studio    # Open Drizzle Studio (GUI)
+```
+
+**Avec Bun** : Remplacez `npm run` par `bun` (ex: `bun db:push`)
 
 ## 📄 Licence
 

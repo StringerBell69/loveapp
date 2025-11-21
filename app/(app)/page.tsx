@@ -7,6 +7,8 @@ import { MobileHeader } from "@/components/layout/MobileHeader";
 import { FAB } from "@/components/layout/FAB";
 import { DaysCounter } from "@/components/dashboard/DaysCounter";
 import { UpcomingEvents } from "@/components/dashboard/UpcomingEvents";
+import { LastMemoryCard } from "@/components/dashboard/LastMemoryCard";
+import { UnreadMessagesCard } from "@/components/dashboard/UnreadMessagesCard";
 import { useCouple } from "@/hooks/useCouple";
 import { fadeIn, staggerContainer, staggerItem } from "@/lib/animations";
 
@@ -65,17 +67,15 @@ export default function DashboardPage() {
           <UpcomingEvents />
         </motion.div>
 
-        {/* CTA Card if no events */}
-        {couple && (
-          <motion.div variants={staggerItem}>
-            <div className="mt-8 p-6 bg-lavande/30 rounded-xl text-center border border-border">
-              <p className="text-lg mb-2">✨ Créez vos premiers souvenirs</p>
-              <p className="text-sm text-muted-foreground">
-                Ajoutez vos dates importantes et rendez-vous romantiques
-              </p>
-            </div>
-          </motion.div>
-        )}
+        {/* Last Memory */}
+        <motion.div variants={staggerItem}>
+          <LastMemoryCard />
+        </motion.div>
+
+        {/* Unread Messages */}
+        <motion.div variants={staggerItem}>
+          <UnreadMessagesCard />
+        </motion.div>
       </motion.div>
 
       {/* FAB to add event */}
