@@ -92,19 +92,19 @@ export function useCouple() {
     if (coupleError) throw coupleError;
     if (!coupleData) throw new Error("Failed to create couple");
 
-    // Update user profile and get the updated profile
-    const { data: updatedProfile, error: profileError } = await supabase
+    // Update user profile
+    const { error: profileError } = await supabase
       .from("user_profiles")
       .update({ couple_id: coupleData.id })
-      .eq("id", user.id)
-      .select()
-      .single();
+      .eq("id", user.id);
 
     if (profileError) throw profileError;
 
     // Update local state with both couple and updated profile
     setCouple(coupleData as Couple);
-    setProfile(updatedProfile as UserProfile);
+    if (profile) {
+      setProfile({ ...profile, couple_id: coupleData.id } as UserProfile);
+    }
 
     return coupleData as Couple;
   };
@@ -132,19 +132,19 @@ export function useCouple() {
       throw new Error("Ce couple a déjà 2 membres");
     }
 
-    // Update user profile and get the updated profile
-    const { data: updatedProfile, error: profileError } = await supabase
+    // Update user profile
+    const { error: profileError } = await supabase
       .from("user_profiles")
       .update({ couple_id: coupleData.id })
-      .eq("id", user.id)
-      .select()
-      .single();
+      .eq("id", user.id);
 
     if (profileError) throw profileError;
 
     // Update local state with both couple and updated profile
     setCouple(coupleData as Couple);
-    setProfile(updatedProfile as UserProfile);
+    if (profile) {
+      setProfile({ ...profile, couple_id: coupleData.id } as UserProfile);
+    }
 
     return coupleData as Couple;
   };

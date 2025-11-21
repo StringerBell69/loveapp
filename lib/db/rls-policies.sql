@@ -100,7 +100,10 @@ CREATE POLICY "Users can insert own profile"
 DROP POLICY IF EXISTS "Users can view profiles in their couple" ON user_profiles;
 CREATE POLICY "Users can view profiles in their couple"
   ON user_profiles FOR SELECT
-  USING (couple_id = public.get_user_couple_id());
+  USING (
+    couple_id = public.get_user_couple_id()
+    AND id != auth.uid()  -- Only for partner's profile, not own profile
+  );
 
 -- RLS Policies for couples
 DROP POLICY IF EXISTS "Users can view their couple" ON couples;
