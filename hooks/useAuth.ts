@@ -43,25 +43,20 @@ export function useAuth() {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
+    // Pass name in metadata - the database trigger will create the profile automatically
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name: name,
+        },
+      },
     });
 
     if (authError) throw authError;
 
-    if (authData.user) {
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from("user_profiles")
-        .insert({
-          id: authData.user.id,
-          name,
-        } as any);
-
-      if (profileError) throw profileError;
-    }
-
+    // No need to manually create profile - the trigger handles it!
     return authData;
   };
 
