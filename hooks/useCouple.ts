@@ -92,16 +92,20 @@ export function useCouple() {
     if (coupleError) throw coupleError;
     if (!coupleData) throw new Error("Failed to create couple");
 
-    // Update user profile
-    // @ts-ignore - Supabase type inference issue
-    const { error: profileError } = await supabase
+    // Update user profile and get the updated profile
+    const { data: updatedProfile, error: profileError } = await supabase
       .from("user_profiles")
       .update({ couple_id: coupleData.id })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select()
+      .single();
 
     if (profileError) throw profileError;
 
+    // Update local state with both couple and updated profile
     setCouple(coupleData as Couple);
+    setProfile(updatedProfile as UserProfile);
+
     return coupleData as Couple;
   };
 
@@ -128,16 +132,20 @@ export function useCouple() {
       throw new Error("Ce couple a déjà 2 membres");
     }
 
-    // Update user profile
-    // @ts-ignore - Supabase type inference issue
-    const { error: profileError } = await supabase
+    // Update user profile and get the updated profile
+    const { data: updatedProfile, error: profileError } = await supabase
       .from("user_profiles")
       .update({ couple_id: coupleData.id })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select()
+      .single();
 
     if (profileError) throw profileError;
 
+    // Update local state with both couple and updated profile
     setCouple(coupleData as Couple);
+    setProfile(updatedProfile as UserProfile);
+
     return coupleData as Couple;
   };
 

@@ -57,7 +57,7 @@ export default function CoupleSetupPage() {
         description: "Vous êtes maintenant connectés",
       });
 
-      router.push("/");
+      router.push("/dashboard");
     } catch (error: unknown) {
       const err = error as Error;
       toast({
@@ -81,7 +81,7 @@ export default function CoupleSetupPage() {
   };
 
   const handleContinue = () => {
-    router.push("/");
+    router.push("/dashboard");
   };
 
   return (
