@@ -104,7 +104,7 @@ CREATE OR REPLACE FUNCTION generate_daily_question()
 RETURNS VOID AS $$
 DECLARE
   v_question_id UUID;
-  v_last_categories VARCHAR[];
+  v_last_categories question_category[];
 BEGIN
   -- Check if question already exists for today
   IF EXISTS (SELECT 1 FROM question_of_the_day WHERE date = CURRENT_DATE) THEN
@@ -112,13 +112,16 @@ BEGIN
   END IF;
 
   -- Get last 7 categories used
-  SELECT ARRAY_AGG(dq.category)
+  SELECT ARRAY_AGG(category ORDER BY qotd_date DESC)
   INTO v_last_categories
-  FROM question_of_the_day qotd
-  JOIN daily_questions dq ON qotd.question_id = dq.id
-  WHERE qotd.date >= CURRENT_DATE - INTERVAL '7 days'
-  ORDER BY qotd.date DESC
-  LIMIT 7;
+  FROM (
+    SELECT dq.category, qotd.date as qotd_date
+    FROM question_of_the_day qotd
+    JOIN daily_questions dq ON qotd.question_id = dq.id
+    WHERE qotd.date >= CURRENT_DATE - INTERVAL '7 days'
+    ORDER BY qotd.date DESC
+    LIMIT 7
+  ) subq;
 
   -- Select a random question avoiding:
   -- 1. Questions used in the last 60 days
